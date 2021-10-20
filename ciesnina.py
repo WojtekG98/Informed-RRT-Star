@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 def isStateValid(state):
     x = state.getX()
     y = state.getY()
-    if (48 >= x >= 0 or 100 >= x >= 52) and 53 >= y >= 47:
+    if (48 >= x >= -50 or 150 >= x >= 52) and 53 >= y >= 47:
         return False
     else:
         return True
@@ -11,7 +11,7 @@ def isStateValid(state):
 def isStateValid2(state):
     x = state[0]
     y = state[1]
-    if (48 >= x >= 0 or 100 >= x >= 52) and 53 >= y >= 47:
+    if (48 >= x >= -50 or 150 >= x >= 52) and 53 >= y >= 47:
         return False
     else:
         return True

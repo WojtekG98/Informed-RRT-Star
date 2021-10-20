@@ -11,9 +11,9 @@ import ciesnina
 import losoweprzeszkody
 import labirynt
 
-cies = 0
+cies = 1
 lab = 0
-loso = 1
+loso = 0
 naro = 0
 inna = 0
 
