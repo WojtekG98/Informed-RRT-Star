@@ -1,9 +1,11 @@
 import matplotlib.pyplot as plt
 
+w = 10
+N = 100
 def isStateValid(state):
     x = state.getX()
     y = state.getY()
-    if (48 >= y >= -50 or 150 >= y >= 52) and 53 >= x >= 47:
+    if N/2+w+1 >= x >= N/2-w-1 and N/2+w+1 >= y >= N/2-w-1:
         return False
     else:
         return True
@@ -11,17 +13,16 @@ def isStateValid(state):
 def isStateValid2(state):
     x = state[0]
     y = state[1]
-    if (48 >= y >= -50 or 150 >= y >= 52) and 53 >= x >= 47:
+    if N/2+w+1 >= x >= N/2-w-1 and N/2+w+1 >= y >= N/2-w-1:
         return False
     else:
         return True
 
 def paint_obs(LowB, HighB):
     plt.axis([LowB, HighB, LowB, HighB])
-    rec1 = plt.Rectangle([0, 48], 47, 4, color='k')
-    rec2 = plt.Rectangle([53, 48], 47, 4, color='k')
+    rec1 = plt.Rectangle([N/2-w, N/2-w], 2*w, 2*w, color='k')
     plt.gcf().gca().add_artist(rec1)
-    plt.gcf().gca().add_artist(rec2)
+
 
 if __name__ == '__main__':
     paint_obs(0, 100)

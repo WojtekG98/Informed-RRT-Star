@@ -10,26 +10,16 @@ import naroznik
 import ciesnina
 import losoweprzeszkody
 import labirynt
+import prostokat as prostokatfile
 
-cies = 1
+cies = 0
 lab = 0
 loso = 0
 naro = 0
+prostokat = 1
 inna = 0
 
 N = 100.0
-radius = 20
-center = [N / 4 + 10, N / 4 + 10]
-radius2 = 20
-center2 = [3 * N / 4 - 10, 3 * N / 4 - 10]
-
-
-def isStateValid(state):
-    x = state.getX()
-    y = state.getY()
-    return (x - center[0]) ** 2 + (y - center[1]) ** 2 > radius ** 2 \
-           and sqrt((x - center2[0]) ** 2 + (y - center2[1]) ** 2) > radius2
-
 
 def plan(space, planner, runTime, start, goal):
     ss = og.SimpleSetup(space)
@@ -41,11 +31,13 @@ def plan(space, planner, runTime, start, goal):
         ss.setStateValidityChecker(ob.StateValidityCheckerFn(losoweprzeszkody.isStateValid))
     if lab == 1:
         ss.setStateValidityChecker(ob.StateValidityCheckerFn(labirynt.isStateValid))
+    if prostokat == 1:
+        ss.setStateValidityChecker(ob.StateValidityCheckerFn(prostokatfile.isStateValid))
 
     ss.setStartAndGoalStates(start, goal)
     if planner == 'RRT':
         ss.setPlanner(RRT.RRT(ss.getSpaceInformation()))
-    elif planner == 'Astar':
+    elif planner.lower() == 'astar':
         ss.setPlanner(Astar.Astar(ss.getSpaceInformation()))
     elif planner.lower() == "rrtconnect":
         ss.setPlanner(og.RRTConnect(ss.getSpaceInformation()))
@@ -58,11 +50,17 @@ def plan(space, planner, runTime, start, goal):
     else:
         print('Bad planner')
     print(planner, ":")
+    if planner.lower() == "informedrrtstar" or planner.lower() == "rrtstar":
+        ss.setup()
+        OptObj = ss.getOptimizationObjective()
+        OptObj.setCostThreshold(59.03)
+        ss.setOptimizationObjective(OptObj)
+        print(OptObj)
     solved = ss.solve(runTime)
     if solved:
-        ss.simplifySolution()
+        #ss.simplifySolution()
         path = ss.getSolutionPath()
-        print("Info:    Path length:", path.length())
+        #print("Info:    Path length:", path.length())
         # print(path.printAsMatrix())
         path.interpolate(1000)
         return path.printAsMatrix()
@@ -110,10 +108,12 @@ def paintobs():
         losoweprzeszkody.paint_obs(0, N)
     if lab == 1:
         labirynt.paint_obs(0, N)
+    if prostokat == 1:
+        prostokatfile.paint_obs(0, N)
 
 def plot_path_to_png(path, style, LowB, HighB, fignum, legend, pathtofile):
     plt.figure(fignum)
-    if rrt_path:
+    if path:
         plot_path(path, style, LowB, HighB)
         plt.plot(start[0], start[1], 'g*')
         plt.plot(goal[0], goal[1], 'y*')
@@ -126,9 +126,9 @@ def set_start_and_goal(start, goal):
     if naro == 1:
         start[0], start[1] = 18, 18
         goal[0], goal[1] = 60, 60
-    if cies == 1:
-        start[0], start[1] = 10, 10
-        goal[0], goal[1] = 20, 80
+    if cies == 1 or prostokat == 1:
+        start[0], start[1] = N/4, N/2
+        goal[0], goal[1] = 3*N/4, N/2
     if loso == 1:
         start[0], start[1] = 25, 25
         goal[0], goal[1] = 90, 80
@@ -172,24 +172,20 @@ if __name__ == '__main__':
     print("start: ", start[0], start[1])
     print("goal: ", goal[0], goal[1])
 
-    rrt_path = plan(space, 'RRT', 1000, start, goal)
-    plot_path_to_png(rrt_path, 'r-', 0, N, 1, ('RRT', 'start', 'goal'), 'figures/path_RRT.png')
-    print(print_path_txt(rrt_path))
-
+    #astar_path = plan(space, 'astar', 100, start, goal)
     rrtstar_path = plan(space, 'rrtstar', 20, start, goal)
-    plot_path_to_png(rrtstar_path, 'g-', 0, N, 2, ('RRT*', 'start', 'goal'), 'figures/path_RRTStar.png')
+    plot_path_to_png(rrtstar_path, 'g-', 0, N, 1, ('RRT*', 'start', 'goal'), 'figures/path_RRTStar.png')
     print(print_path_txt(rrtstar_path))
 
     informedrrtstar_path = plan(space, 'informedrrtstar', 20, start, goal)
-    plot_path_to_png(informedrrtstar_path, 'm-', 0, N, 3, ('Informed RRT*', 'start', 'goal'), 'figures/path_InformedRRTStar.png')
-    print(print_path_txt(rrt_path))
+    plot_path_to_png(informedrrtstar_path, 'm-', 0, N, 2, ('Informed RRT*', 'start', 'goal'), 'figures/path_InformedRRTStar.png')
+    print(print_path_txt(informedrrtstar_path))
 
-    plt.figure(4)
+    plt.figure(3)
     paintobs()
-    plot_path(rrt_path, 'r-', 0, N)
     plot_path(rrtstar_path, 'g-', 0, N)
     plot_path(informedrrtstar_path, 'm-', 0, N)
-    plt.legend(('RRT', 'RRT*', 'Informed RRT*'))
+    plt.legend(('RRT*', 'Informed RRT*'))
     plt.gca().set_aspect('equal', adjustable='box')
     plt.plot(start[0], start[1], 'g*')
     plt.plot(goal[0], goal[1], 'y*')
