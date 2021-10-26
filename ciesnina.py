@@ -1,9 +1,18 @@
 import matplotlib.pyplot as plt
+import random
+
+N = 200
+t = 20
+hg = 1.5
+yg = random.randrange(10, 90)
+h = 100
+pom = 50
+pom2 = 90
 
 def isStateValid(state):
     x = state.getX()
     y = state.getY()
-    if (48 >= y >= -50 or 150 >= y >= 52) and 53 >= x >= 47:
+    if (yg+pom >= y >= pom or h+pom >= y >= pom+hg+yg) and pom2+t >= x >= pom2:
         return False
     else:
         return True
@@ -11,15 +20,15 @@ def isStateValid(state):
 def isStateValid2(state):
     x = state[0]
     y = state[1]
-    if (48 >= y >= -50 or 150 >= y >= 52) and 53 >= x >= 47:
+    if (yg+pom >= y >= pom or h+pom >= y >= pom+hg+yg) and pom2+t >= x >= pom2:
         return False
     else:
         return True
 
 def paint_obs(LowB, HighB):
     plt.axis([LowB, HighB, LowB, HighB])
-    rec1 = plt.Rectangle([0, 48], 47, 4, color='k')
-    rec2 = plt.Rectangle([53, 48], 47, 4, color='k')
+    rec1 = plt.Rectangle([pom2+1, pom+1], t-1, yg-1, color='k')
+    rec2 = plt.Rectangle([pom2+1, pom+hg+yg+1], t-1, h-yg-hg-1, color='k')
     plt.gcf().gca().add_artist(rec1)
     plt.gcf().gca().add_artist(rec2)
 

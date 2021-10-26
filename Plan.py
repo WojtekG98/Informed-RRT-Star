@@ -3,6 +3,7 @@ from ompl import geometric as og
 import matplotlib.pyplot as plt
 from math import sqrt
 from math import pi
+import sys
 import Astar
 import RRT
 import random
@@ -12,15 +13,16 @@ import losoweprzeszkody
 import labirynt
 import prostokat as prostokatfile
 
-cies = 0
+cies = 1
 lab = 0
 loso = 0
 naro = 0
-prostokat = 1
+prostokat = 0
 inna = 0
 
-N = 100.0
-
+N = 200.0
+dgoal = 100
+dwaprocent = 100
 def plan(space, planner, runTime, start, goal):
     ss = og.SimpleSetup(space)
     if naro == 1:
@@ -53,17 +55,23 @@ def plan(space, planner, runTime, start, goal):
     if planner.lower() == "informedrrtstar" or planner.lower() == "rrtstar":
         ss.setup()
         OptObj = ss.getOptimizationObjective()
-        OptObj.setCostThreshold(59.03)
+        OptObj.setCostThreshold(dwaprocent)
         ss.setOptimizationObjective(OptObj)
-        print(OptObj)
+        # print(OptObj)
     solved = ss.solve(runTime)
+    #print("czas")
+    print(ss.getLastPlanComputationTime())
     if solved:
-        #ss.simplifySolution()
+        ss.simplifySolution()
         path = ss.getSolutionPath()
         #print("Info:    Path length:", path.length())
         # print(path.printAsMatrix())
         path.interpolate(1000)
-        return path.printAsMatrix()
+        if planner.lower() == 'astar':
+            return path.length()
+        else:
+            return path.printAsMatrix()
+
     else:
         print("No solution found.")
         return None
@@ -127,8 +135,8 @@ def set_start_and_goal(start, goal):
         start[0], start[1] = 18, 18
         goal[0], goal[1] = 60, 60
     if cies == 1 or prostokat == 1:
-        start[0], start[1] = N/4, N/2
-        goal[0], goal[1] = 3*N/4, N/2
+        start[0], start[1] = (N-dgoal)/2, N/2
+        goal[0], goal[1] = (N+dgoal)/2, N/2
     if loso == 1:
         start[0], start[1] = 25, 25
         goal[0], goal[1] = 90, 80
@@ -159,6 +167,44 @@ def set_start_and_goal(start, goal):
             while not naroznik.isStateValid2(goal):
                 goal[0], goal[1] = random.randint(19, N), random.randint(19, N)
 
+def badanie(nr, space, bounds, start, goal):
+    nazwa_pliku = "1.txt"
+    if cies == 1:
+        nazwa_pliku = "badania/gap/gap_15" + str(nr) + ".txt"
+    elif prostokat == 1:
+        nazwa_pliku = "badania/obs/kwadrat_N" + str(N) + "_dgoal_" + str(dgoal) + "_" + str(nr) + ".txt"
+        #print('Kwadrat')
+    f = open(nazwa_pliku, 'w')
+    sys.stdout = f
+    # if cies == 1:
+    #     print('Gap')
+    # elif prostokat == 1:
+    #     print('Kwadrat')
+
+    # print("start: ", start[0], start[1])
+    # print("goal: ", goal[0], goal[1])
+
+    # astar_path = plan(space, 'astar', 100, start, goal)
+    rrtstar_path = plan(space, 'rrtstar', 1000, start, goal)
+    # plot_path_to_png(rrtstar_path, 'g-', 0, N, 1, ('RRT*', 'start', 'goal'), 'figures/path_RRTStar.png')
+    # print(print_path_txt(rrtstar_path))
+
+    informedrrtstar_path = plan(space, 'informedrrtstar', 1000, start, goal)
+    # plot_path_to_png(informedrrtstar_path, 'm-', 0, N, 2, ('Informed RRT*', 'start', 'goal'),'figures/path_InformedRRTStar.png')
+    # print(print_path_txt(informedrrtstar_path))
+
+    plt.figure(3)
+    paintobs()
+    plot_path(rrtstar_path, 'g-', 0, N)
+    plot_path(informedrrtstar_path, 'm-', 0, N)
+    plt.legend(('RRT*', 'Informed RRT*'))
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.plot(start[0], start[1], 'g*')
+    plt.plot(goal[0], goal[1], 'y*')
+    plt.savefig('figures/paths.png')
+    # print("l/dgoal =")
+    # print(N / dgoal)
+
 
 if __name__ == '__main__':
     space = ob.ReedsSheppStateSpace(2)
@@ -171,22 +217,12 @@ if __name__ == '__main__':
     set_start_and_goal(start, goal)
     print("start: ", start[0], start[1])
     print("goal: ", goal[0], goal[1])
-
-    #astar_path = plan(space, 'astar', 100, start, goal)
-    rrtstar_path = plan(space, 'rrtstar', 20, start, goal)
-    plot_path_to_png(rrtstar_path, 'g-', 0, N, 1, ('RRT*', 'start', 'goal'), 'figures/path_RRTStar.png')
-    print(print_path_txt(rrtstar_path))
-
-    informedrrtstar_path = plan(space, 'informedrrtstar', 20, start, goal)
-    plot_path_to_png(informedrrtstar_path, 'm-', 0, N, 2, ('Informed RRT*', 'start', 'goal'), 'figures/path_InformedRRTStar.png')
-    print(print_path_txt(informedrrtstar_path))
-
-    plt.figure(3)
-    paintobs()
-    plot_path(rrtstar_path, 'g-', 0, N)
-    plot_path(informedrrtstar_path, 'm-', 0, N)
-    plt.legend(('RRT*', 'Informed RRT*'))
-    plt.gca().set_aspect('equal', adjustable='box')
-    plt.plot(start[0], start[1], 'g*')
-    plt.plot(goal[0], goal[1], 'y*')
-    plt.savefig('figures/paths.png')
+    if prostokat == 1:
+        astar_path_length = plan(space, 'astar', 1000, start, goal)
+        print(astar_path_length)
+        dwaprocent = 1.02 * astar_path_length
+    else:
+        dwaprocent = 150
+    # plot_path_to_png(astar_path, 'g-', 0, N, 1, ('A*', 'start', 'goal'), 'figures/path_AStar.png')
+    for numer in range(10):
+        badanie(numer, space, bounds, start, goal)

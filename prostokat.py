@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 w = 10
-N = 100
+N = 300
 def isStateValid(state):
     x = state.getX()
     y = state.getY()
