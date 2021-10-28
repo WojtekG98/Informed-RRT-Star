@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
+import random
 
-w = 10
-N = 300
+w = random.randrange(10, 40)
+N = 100
 def isStateValid(state):
     x = state.getX()
     y = state.getY()

@@ -7,32 +7,20 @@ import sys
 import Astar
 import RRT
 import random
-import naroznik
 import ciesnina
-import losoweprzeszkody
-import labirynt
 import prostokat as prostokatfile
 
-cies = 1
-lab = 0
-loso = 0
-naro = 0
-prostokat = 0
+cies = 0
+prostokat = 1
 inna = 0
 
-N = 200.0
-dgoal = 100
-dwaprocent = 100
+N = 100.0
+dgoal = 50
+c_best = 100
 def plan(space, planner, runTime, start, goal):
     ss = og.SimpleSetup(space)
-    if naro == 1:
-        ss.setStateValidityChecker(ob.StateValidityCheckerFn(naroznik.isStateValid))
     if cies == 1:
         ss.setStateValidityChecker(ob.StateValidityCheckerFn(ciesnina.isStateValid))
-    if loso == 1:
-        ss.setStateValidityChecker(ob.StateValidityCheckerFn(losoweprzeszkody.isStateValid))
-    if lab == 1:
-        ss.setStateValidityChecker(ob.StateValidityCheckerFn(labirynt.isStateValid))
     if prostokat == 1:
         ss.setStateValidityChecker(ob.StateValidityCheckerFn(prostokatfile.isStateValid))
 
@@ -55,11 +43,9 @@ def plan(space, planner, runTime, start, goal):
     if planner.lower() == "informedrrtstar" or planner.lower() == "rrtstar":
         ss.setup()
         OptObj = ss.getOptimizationObjective()
-        OptObj.setCostThreshold(dwaprocent)
+        OptObj.setCostThreshold(c_best)
         ss.setOptimizationObjective(OptObj)
-        # print(OptObj)
     solved = ss.solve(runTime)
-    #print("czas")
     print(ss.getLastPlanComputationTime())
     if solved:
         ss.simplifySolution()
@@ -108,14 +94,8 @@ def plot_path(path, style, LowB, HighB):
     plt.plot(x, y, style)
 
 def paintobs():
-    if naro == 1:
-        naroznik.paint_obs(0, N)
     if cies == 1:
         ciesnina.paint_obs(0, N)
-    if loso == 1:
-        losoweprzeszkody.paint_obs(0, N)
-    if lab == 1:
-        labirynt.paint_obs(0, N)
     if prostokat == 1:
         prostokatfile.paint_obs(0, N)
 
@@ -131,67 +111,42 @@ def plot_path_to_png(path, style, LowB, HighB, fignum, legend, pathtofile):
         plt.savefig(pathtofile)
 
 def set_start_and_goal(start, goal):
-    if naro == 1:
-        start[0], start[1] = 18, 18
-        goal[0], goal[1] = 60, 60
     if cies == 1 or prostokat == 1:
         start[0], start[1] = (N-dgoal)/2, N/2
         goal[0], goal[1] = (N+dgoal)/2, N/2
-    if loso == 1:
-        start[0], start[1] = 25, 25
-        goal[0], goal[1] = 90, 80
-    if lab == 1:
-        start[0], start[1] = 5, 90
-        goal[0], goal[1] = 90, 5
     if inna == 1:
         start[0], start[1] = random.randint(0, N), random.randint(0, N)
         goal[0], goal[1] = random.randint(0, N), random.randint(0, N)
-        if lab == 1:
-            while not labirynt.isStateValid2(start):
-                start[0], start[1] = random.randint(0, N), random.randint(0, N)
-            while not labirynt.isStateValid2(goal):
-                goal[0], goal[1] = random.randint(0, N), random.randint(0, N)
-        if loso == 1:
-            while not losoweprzeszkody.isStateValid2(start):
-                start[0], start[1] = random.randint(0, N / 2), random.randint(0, N / 2)
-            while not losoweprzeszkody.isStateValid2(goal):
-                goal[0], goal[1] = random.randint(N / 2, N), random.randint(N / 2, N)
         if cies == 1:
             while not ciesnina.isStateValid2(start):
                 start[0], start[1] = random.randint(0, N), random.randint(0, N / 2)
             while not ciesnina.isStateValid2(goal):
                 goal[0], goal[1] = random.randint(0, N), random.randint(N / 2, N)
-        if naro == 1:
-            while not naroznik.isStateValid2(start):
-                start[0], start[1] = random.randint(0, 19), random.randint(0, 19)
-            while not naroznik.isStateValid2(goal):
-                goal[0], goal[1] = random.randint(19, N), random.randint(19, N)
+        if prostokat == 1:
+            while not prostokatfile.isStateValid2(start):
+                start[0], start[1] = random.randint(0, N), random.randint(0, N / 2)
+            while not prostokatfile.isStateValid2(goal):
+                goal[0], goal[1] = random.randint(0, N), random.randint(N / 2, N)
 
-def badanie(nr, space, bounds, start, goal):
+def badanie(nr, space, start, goal):
     nazwa_pliku = "1.txt"
     if cies == 1:
-        nazwa_pliku = "badania/gap/gap_15" + str(nr) + ".txt"
+        nazwa_pliku = "badania/gap/gap5" + str(nr) + ".txt"
     elif prostokat == 1:
         nazwa_pliku = "badania/obs/kwadrat_N" + str(N) + "_dgoal_" + str(dgoal) + "_" + str(nr) + ".txt"
-        #print('Kwadrat')
     f = open(nazwa_pliku, 'w')
     sys.stdout = f
-    # if cies == 1:
-    #     print('Gap')
-    # elif prostokat == 1:
-    #     print('Kwadrat')
-
-    # print("start: ", start[0], start[1])
-    # print("goal: ", goal[0], goal[1])
-
-    # astar_path = plan(space, 'astar', 100, start, goal)
+    if cies == 1:
+        print("GAP\n")
+    elif prostokat == 1:
+        print("OBSTACLE\n")
+        print("l/dgoal =")
+        print(N / dgoal)
     rrtstar_path = plan(space, 'rrtstar', 1000, start, goal)
-    # plot_path_to_png(rrtstar_path, 'g-', 0, N, 1, ('RRT*', 'start', 'goal'), 'figures/path_RRTStar.png')
-    # print(print_path_txt(rrtstar_path))
+    plot_path_to_png(rrtstar_path, 'g-', 0, N, 1, ('RRT*', 'start', 'goal'), 'figures/path_RRTStar.png')
 
     informedrrtstar_path = plan(space, 'informedrrtstar', 1000, start, goal)
-    # plot_path_to_png(informedrrtstar_path, 'm-', 0, N, 2, ('Informed RRT*', 'start', 'goal'),'figures/path_InformedRRTStar.png')
-    # print(print_path_txt(informedrrtstar_path))
+    plot_path_to_png(informedrrtstar_path, 'm-', 0, N, 2, ('Informed RRT*', 'start', 'goal'),'figures/path_InformedRRTStar.png')
 
     plt.figure(3)
     paintobs()
@@ -202,8 +157,6 @@ def badanie(nr, space, bounds, start, goal):
     plt.plot(start[0], start[1], 'g*')
     plt.plot(goal[0], goal[1], 'y*')
     plt.savefig('figures/paths.png')
-    # print("l/dgoal =")
-    # print(N / dgoal)
 
 
 if __name__ == '__main__':
@@ -220,9 +173,11 @@ if __name__ == '__main__':
     if prostokat == 1:
         astar_path_length = plan(space, 'astar', 1000, start, goal)
         print(astar_path_length)
-        dwaprocent = 1.02 * astar_path_length
+        if astar_path_length:
+            c_best = 1.02 * astar_path_length
+        else:
+            c_best = dgoal*dgoal
     else:
-        dwaprocent = 150
-    # plot_path_to_png(astar_path, 'g-', 0, N, 1, ('A*', 'start', 'goal'), 'figures/path_AStar.png')
+        c_best = 150
     for numer in range(10):
-        badanie(numer, space, bounds, start, goal)
+        badanie(numer, space, start, goal)

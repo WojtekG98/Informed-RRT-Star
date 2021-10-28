@@ -3,7 +3,7 @@ import random
 
 N = 200
 t = 20
-hg = 1.5
+hg = 5
 yg = random.randrange(10, 90)
 h = 100
 pom = 50
@@ -31,6 +31,7 @@ def paint_obs(LowB, HighB):
     rec2 = plt.Rectangle([pom2+1, pom+hg+yg+1], t-1, h-yg-hg-1, color='k')
     plt.gcf().gca().add_artist(rec1)
     plt.gcf().gca().add_artist(rec2)
+
 
 if __name__ == '__main__':
     paint_obs(0, 100)
